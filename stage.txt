@@ -1,0 +1,181 @@
+751:        {/* Dynamic Room Background (Night Starry window) */}
+752-        <div className="absolute inset-0 z-0 flex items-center justify-center opacity-80 pointer-events-none">
+753-           <div className="w-[600px] h-[600px] bg-[#8B6DFF]/5 rounded-full blur-[100px] absolute" />
+754-           <div className="w-[400px] h-[400px] rounded-full border-[12px] border-[#1D1B20]/50 absolute backdrop-blur-sm" style={{ boxShadow: 'inset 0 0 100px rgba(0,0,0,0.5)' }}>
+755-              {/* Starry night inside window */}
+756-              <div className="absolute inset-0 rounded-full bg-gradient-to-b from-[#1E1B2E] to-transparent overflow-hidden">
+757-                 <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-white rounded-full animate-pulse" />
+758-                 <div className="absolute top-1/3 right-1/3 w-1.5 h-1.5 bg-white rounded-full animate-ping" style={{ animationDuration: '3s' }} />
+759-                 <div className="absolute top-1/2 left-2/3 w-2 h-2 bg-white rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
+760-              </div>
+761-           </div>
+762-        </div>
+763-
+764-        {/* Main Pet Stage */}
+765-        <div ref={stageRef} className="flex-1 relative z-10 flex items-center justify-center p-4">
+766-          
+767-          {/* Balanced Layered Room Container */}
+768-          <div className="relative w-80 h-80 sm:w-96 sm:h-96 flex items-center justify-center">
+769-            {/* Placed Furniture Items */}
+770-            {placedFurniture.map((fId: string) => {
+771-              if (fId === 'house') {
+772-                return (
+773-                  <motion.div 
+774-                    key={fId}
+775-                    initial={{ scale: 0, opacity: 0 }}
+776-                    animate={{ scale: 1, opacity: 0.9 }}
+777-                    className="absolute top-[12%] left-[4%] text-6xl sm:text-7xl md:text-8xl z-0 select-none pointer-events-none drop-shadow-2xl"
+778-                    title="Wooden House"
+779-                  >
+780-                    🏠
+781-                  </motion.div>
+782-                );
+783-              }
+784-              if (fId === 'bed') {
+785-                return (
+786-                  <motion.div 
+787-                    key={fId}
+788-                    initial={{ scale: 0, opacity: 0 }}
+789-                    animate={{ scale: 1, opacity: 0.85 }}
+790-                    className="absolute bottom-[16%] left-1/2 -translate-x-1/2 text-7xl sm:text-8xl md:text-9xl z-0 select-none pointer-events-none drop-shadow-2xl"
+791-                    title="Cozy Bed"
+792-                  >
+793-                    🛏️
+794-                  </motion.div>
+795-                );
+796-              }
+797-              if (fId === 'cleaner') {
+798-                return (
+799-                  <motion.div 
+800-                    key={fId}
+801-                    animate={{ 
+802-                      x: [0, 60, -60, 0],
+803-                      y: [0, -6, 6, 0],
+804-                      rotate: [0, 360]
+805-                    }}
+806-                    transition={{ 
+807-                      repeat: Infinity, 
+808-                      duration: 12,
+809-                      ease: "easeInOut"
+810-                    }}
+811-                    className="absolute bottom-[5%] right-[5%] text-3xl sm:text-4xl z-20 select-none pointer-events-none drop-shadow-lg"
+812-                    title="Robotic Vacuum Cleaner"
+813-                  >
+814-                    🤖🧹
+815-                  </motion.div>
+816-                );
+817-              }
+818-              if (fId === 'bowl') {
+819-                return (
+820-                  <motion.div 
+821-                    key={fId}
+822-                    initial={{ scale: 0, opacity: 0 }}
+823-                    animate={{ scale: 1, opacity: 1 }}
+824-                    className="absolute bottom-[10%] right-[15%] text-4xl sm:text-5xl z-20 select-none pointer-events-none drop-shadow-lg"
+825-                    title="Bowl"
+826-                  >
+827-                    🥣
+828-                  </motion.div>
+829-                );
+830-              }
+831-              if (fId === 'toy') {
+832-                return (
+833-                  <motion.div 
+834-                    key={fId}
+835-                    animate={{ 
+836-                      y: [0, -6, 0],
+837-                    }}
+838-                    transition={{ 
+839-                      repeat: Infinity, 
+840-                      duration: 4,
+841-                      ease: "easeInOut"
+842-                    }}
+843-                    className="absolute bottom-[10%] left-[15%] text-4xl sm:text-5xl z-20 select-none pointer-events-none drop-shadow-lg"
+844-                    title="Toy"
+845-                  >
+846-                    🧸
+847-                  </motion.div>
+848-                );
+849-              }
+850-              if (fId === 'pillow') {
+851-                return (
+852-                  <motion.div 
+853-                    key={fId}
+854-                    initial={{ scale: 0, opacity: 0 }}
+855-                    animate={{ scale: 1, opacity: 1 }}
+856-                    className="absolute bottom-[24%] right-[4%] text-4xl sm:text-5xl md:text-6xl z-0 select-none pointer-events-none drop-shadow-2xl"
+857-                    title="Pillow"
+858-                  >
+859-                    🛋️
+860-                  </motion.div>
+861-                );
+862-              }
+863-              if (fId === 'ball') {
+864-                return (
+865-                  <motion.div 
+866-                    key={fId}
+867-                    animate={{ 
+868-                      rotate: 360,
+869-                      x: [-20, 20, -20]
+870-                    }}
+871-                    transition={{ 
+872-                      repeat: Infinity, 
+873-                      duration: 5,
+874-                      ease: "linear"
+875-                    }}
+876-                    className="absolute bottom-[6%] left-[28%] text-3xl sm:text-4xl z-20 select-none pointer-events-none drop-shadow-lg"
+877-                    title="Ball"
+878-                  >
+879-                    ⚽
+880-                  </motion.div>
+881-                );
+882-              }
+883-              return null;
+884-            })}
+885-
+886-            {/* Pet Model Container */}
+887-            <motion.div 
+888-              className="w-40 h-40 sm:w-48 sm:h-48 relative cursor-pointer z-10"
+889-              onClick={() => handlePetInteraction('pat')}
+890-              whileHover={{ scale: 1.05 }}
+891-              whileTap={{ scale: 0.95 }}
+892-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+893-            >
+894-              <PetSVG 
+895-                species={pet.species} 
+896-                color={currentPetColor} 
+897-                state={currentSatiety < 10 ? 'hibernate' : fsmState} 
+898-                equippedAccessories={equippedAccessories}
+899-                activeEffects={activeEffects}
+900-              />
+901-
+902-              {/* Speaking Bubble */}
+903-              <AnimatePresence>
+904-                {bubbleText && (
+905-                  <motion.div 
+906-                    initial={{ opacity: 0, y: 10, scale: 0.8 }}
+907-                    animate={{ opacity: 1, y: 0, scale: 1 }}
+908-                    exit={{ opacity: 0, scale: 0.8 }}
+909-                    className="absolute -top-14 left-1/2 -translate-x-1/2 bg-white text-[#1E1B2E] px-3.5 py-1.5 rounded-[20px] text-xs font-bold whitespace-nowrap shadow-xl"
+910-                  >
+911-                    {bubbleText}
+912-                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-white" />
+913-                  </motion.div>
+914-                )}
+915-              </AnimatePresence>
+916-              
+917-              {/* Sleeping Zzz */}
+918-              {fsmState === 'sleep' && (
+919-                <span className="absolute -top-4 right-0 text-xl font-bold text-sky-300 animate-pulse">💤</span>
+920-              )}
+921-
+922-              {/* Heart Animations */}
+923-              <AnimatePresence>
+924-                {hearts.map((h) => (
+925-                  <motion.span
+926-                    key={h.id}
+927-                    initial={{ y: 0, opacity: 1, scale: 0.5 }}
+928-                    animate={{ y: -100, x: (Math.random() - 0.5) * 80, opacity: 0, scale: 1.5 }}
+929-                    exit={{ opacity: 0 }}
+930-                    transition={{ duration: 1.2, delay: parseFloat(h.delay), ease: "easeOut" }}
+931-                    className="absolute text-[#FF85A2] text-2xl sm:text-3xl pointer-events-none z-40"

@@ -1,0 +1,332 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id              String           @id @default(uuid())
+  username        String           @unique
+  displayName     String
+  bio             String?
+  avatar          String?          // Seeded or selected avatar index
+  publicKey       String           @db.Text // RSA/ECDH Public key for E2EE
+  recoveryKeyHash String           // Hash of the recovery key
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  devices         Device[]
+  sessions        Session[]
+  circles         Circle[]
+  logs            AuditLog[]
+  messages        Message[]
+  stories         Story[]
+  vaultItems      VaultItem[]
+  secretBoxItems  SecretBoxItem[]
+  journals        SharedJournal[]
+  votes           PollVote[]
+
+  // Relationships
+  couples1        Couple[]         @relation("User1")
+  couples2        Couple[]         @relation("User2")
+  bffGroups       BffMember[]
+}
+
+model Device {
+  id           String     @id @default(uuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String     // e.g. "Safari on iPhone"
+  browser      String
+  os           String
+  ip           String
+  publicKey    String     @db.Text // Device specific key
+  isApproved   Boolean    @default(false)
+  approvedAt   DateTime?
+  lastActiveAt DateTime   @default(now())
+  createdAt    DateTime   @default(now())
+
+  sessions     Session[]
+  logs         AuditLog[]
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceId  String
+  device    Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Circle {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String   // Family, Friends, Work, Gaming, Custom
+  type      String   // SYSTEM or CUSTOM
+  createdAt DateTime @default(now())
+}
+
+model Couple {
+  id              String           @id @default(uuid())
+  user1Id         String
+  user1           User             @relation("User1", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2Id         String
+  user2           User             @relation("User2", fields: [user2Id], references: [id], onDelete: Cascade)
+  anniversaryDate DateTime?
+  isAccepted      Boolean          @default(false) // Required mutual consent
+  createdAt       DateTime         @default(now())
+
+  chats           Chat[]
+  vaultItems      VaultItem[]
+  secretBoxItems  SecretBoxItem[]
+  notes           SharedNote[]
+  anniversaries   Anniversary[]
+  events          CalendarEvent[]
+
+  @@unique([user1Id, user2Id])
+}
+
+model BffGroup {
+  id              String           @id @default(uuid())
+  name            String
+  avatar          String?
+  createdAt       DateTime         @default(now())
+
+  members         BffMember[]
+  chats           Chat[]
+  vaultItems      VaultItem[]
+  secretBoxItems  SecretBoxItem[]
+  notes           SharedNote[]
+  whiteboard      WhiteboardState?
+  polls           Poll[]
+  checklists      ChecklistItem[]
+}
+
+model BffMember {
+  id         String   @id @default(uuid())
+  bffGroupId String
+  bffGroup   BffGroup @relation(fields: [bffGroupId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isAccepted Boolean  @default(false) // Required mutual consent to join
+  joinedAt   DateTime @default(now())
+
+  @@unique([bffGroupId, userId])
+}
+
+enum ChatType {
+  COUPLE
+  BFF_GROUP
+}
+
+model Chat {
+  id         String     @id @default(uuid())
+  type       ChatType
+  coupleId   String?
+  couple     Couple?    @relation(fields: [coupleId], references: [id], onDelete: Cascade)
+  bffGroupId String?
+  bffGroup   BffGroup?  @relation(fields: [bffGroupId], references: [id], onDelete: Cascade)
+  createdAt  DateTime   @default(now())
+
+  messages   Message[]
+}
+
+model Message {
+  id                String           @id @default(uuid())
+  chatId            String
+  chat              Chat             @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  senderId          String
+  sender            User             @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  ciphertext        String           @db.Text // E2EE payload
+  iv                String           // Initialization Vector for AES
+  isBurnAfterRead   Boolean          @default(false)
+  burnDurationSec   Int              @default(0) // 0 if not applicable
+  isSelfDestruct    Boolean          @default(false)
+  selfDestructAt    DateTime?
+  replyToId         String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  versions          MessageVersion[]
+}
+
+model MessageVersion {
+  id         String   @id @default(uuid())
+  messageId  String
+  message    Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  ciphertext String   @db.Text // Encrypted old content
+  iv         String
+  createdAt  DateTime @default(now())
+}
+
+enum AudienceType {
+  CIRCLE
+  COUPLE
+  BFF_GROUP
+  CUSTOM
+}
+
+model Story {
+  id               String       @id @default(uuid())
+  userId           String
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ciphertext       String       @db.Text // E2EE text/image-url payload
+  iv               String
+  audienceType     AudienceType
+  targetCircleName String?      // e.g. "Family"
+  targetBffGroupId String?
+  isDownloadable   Boolean      @default(false)
+  isForwardable    Boolean      @default(false)
+  isSaveable       Boolean      @default(false)
+  expiresAt        DateTime
+  createdAt        DateTime     @default(now())
+}
+
+enum OwnerType {
+  USER
+  COUPLE
+  BFF_GROUP
+}
+
+model VaultItem {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ownerType  OwnerType
+  coupleId   String?
+  couple     Couple?   @relation(fields: [coupleId], references: [id], onDelete: Cascade)
+  bffGroupId String?
+  bffGroup   BffGroup? @relation(fields: [bffGroupId], references: [id], onDelete: Cascade)
+  fileName   String    // Encrypted file name
+  fileType   String    // Mime type
+  ciphertext String    @db.Text // URL/Data of the encrypted storage
+  iv         String
+  createdAt  DateTime  @default(now())
+}
+
+model SecretBoxItem {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ownerType  OwnerType
+  coupleId   String?
+  couple     Couple?   @relation(fields: [coupleId], references: [id], onDelete: Cascade)
+  bffGroupId String?
+  bffGroup   BffGroup? @relation(fields: [bffGroupId], references: [id], onDelete: Cascade)
+  ciphertext String    @db.Text // Encrypted payload
+  iv         String
+  openAt     DateTime  // Locked until this time
+  createdAt  DateTime  @default(now())
+}
+
+model Anniversary {
+  id       String   @id @default(uuid())
+  coupleId String
+  couple   Couple   @relation(fields: [coupleId], references: [id], onDelete: Cascade)
+  title    String
+  date     DateTime
+}
+
+model CalendarEvent {
+  id          String   @id @default(uuid())
+  coupleId    String
+  couple      Couple   @relation(fields: [coupleId], references: [id], onDelete: Cascade)
+  title       String
+  date        DateTime
+  description String?  // Encrypted description
+}
+
+model SharedNote {
+  id         String    @id @default(uuid())
+  ownerType  OwnerType
+  coupleId   String?
+  couple     Couple?   @relation(fields: [coupleId], references: [id], onDelete: Cascade)
+  bffGroupId String?
+  bffGroup   BffGroup? @relation(fields: [bffGroupId], references: [id], onDelete: Cascade)
+  title      String    // Encrypted note title
+  ciphertext String    @db.Text // Encrypted note body
+  iv         String
+  updatedAt  DateTime  @updatedAt
+  createdAt  DateTime  @default(now())
+}
+
+model SharedJournal {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title      String   // Encrypted journal title
+  ciphertext String   @db.Text // Encrypted journal body
+  iv         String
+  date       String   // YYYY-MM-DD
+  createdAt  DateTime @default(now())
+}
+
+model WhiteboardState {
+  id         String   @id @default(uuid())
+  bffGroupId String   @unique
+  bffGroup   BffGroup @relation(fields: [bffGroupId], references: [id], onDelete: Cascade)
+  canvasData String   @db.Text // Encrypted coordinate updates
+  updatedAt  DateTime @updatedAt
+}
+
+model Poll {
+  id         String       @id @default(uuid())
+  bffGroupId String
+  bffGroup   BffGroup     @relation(fields: [bffGroupId], references: [id], onDelete: Cascade)
+  question   String       // Encrypted question
+  expiresAt  DateTime
+  createdAt  DateTime     @default(now())
+
+  options    PollOption[]
+  votes      PollVote[]
+}
+
+model PollOption {
+  id         String     @id @default(uuid())
+  pollId     String
+  poll       Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  optionText String     // Encrypted option text
+
+  votes      PollVote[]
+}
+
+model PollVote {
+  id       String     @id @default(uuid())
+  pollId   String
+  poll     Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  optionId String
+  option   PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([pollId, userId])
+}
+
+model ChecklistItem {
+  id         String   @id @default(uuid())
+  bffGroupId String
+  bffGroup   BffGroup @relation(fields: [bffGroupId], references: [id], onDelete: Cascade)
+  text       String   // Encrypted text
+  isCompleted Boolean  @default(false)
+  updatedBy  String   // User ID who updated
+  createdAt  DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  deviceId  String?
+  device    Device?  @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  event     String   // "LOGIN", "SIGNUP", "DEVICE_REVOKED", "STORY_EXPIRED"
+  ip        String   // Anonymized or stored as per requirements
+  metadata  String?  // JSON string of other technical data, e.g. user-agent (no private content)
+  createdAt DateTime @default(now())
+}

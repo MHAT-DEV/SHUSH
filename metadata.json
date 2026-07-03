@@ -1,0 +1,6 @@
+{
+  "name": "SHUSH | แชทปลอดภัยขั้นสุด",
+  "description": "Private Relationship Messenger - Secure, E2EE relationship messaging space for couples and BFF groups.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,15 @@
+{
+  "short_name": "Shush",
+  "name": "Shush | Secure Chat",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#5b21b6",
+  "theme_color": "#5b21b6",
+  "display": "standalone"
+}
